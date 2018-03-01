@@ -10,6 +10,7 @@ import './index.css'
 const query = window.location.search.slice(1)
 const enableLoop = /\bloop\b/.test(query)
 const enableAutoplay = /\bautoplay\b/.test(query)
+const enableButtons = /\bbuttons\b/.test(query)
 
 const cardSize = 300
 const cardPadCount = enableLoop ? 3 : 0
@@ -79,8 +80,17 @@ class App extends Component {
     )
   }
 
+  renderButtons () {
+    return <div className='button-container'>
+      <button onClick={() => this.carouselRef && this.carouselRef.prev()}>Prev</button>
+      <button onClick={() => this.carouselRef && this.carouselRef.next()}>Next</button>
+    </div>
+  }
+
   render () {
     return (
+      <div>
+      { enableButtons && this.renderButtons()}
       <React.StrictMode>
         <TouchCarousel
           component={Container}
@@ -94,8 +104,10 @@ class App extends Component {
           onDragStart={() => log('dragStart')}
           onDragEnd={() => log('dragEnd')}
           onDragCancel={() => log('dragCancel')}
+          ref={r => this.carouselRef = r}
         />
       </React.StrictMode>
+      </div>
     )
   }
 }
