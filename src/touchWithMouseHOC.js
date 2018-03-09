@@ -52,12 +52,16 @@ export default function touchWithMouseHOC (Component, options = {}) {
     })
 
     onMouseDown = (e) => {
-      this.props.onMouseDown(e)
-      this.isMouseDown = true
-      this.mouseDownId++
-      this.clickStartX = e.pageX
-      this.clickStartY = e.pageY
-      this.props.onTouchStart(this.mockTouchEvent(e))
+      // Only left button and without ctrl pushed down
+      // otherwise we start dragging when use opens context menu
+      if(e.button === 0 && !e.ctrlKey) {
+        this.props.onMouseDown(e)
+        this.isMouseDown = true
+        this.mouseDownId++
+        this.clickStartX = e.pageX
+        this.clickStartY = e.pageY
+        this.props.onTouchStart(this.mockTouchEvent(e))
+      }
     }
 
     onDocumentMouseMove = (e) => {
