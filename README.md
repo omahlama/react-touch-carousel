@@ -132,6 +132,11 @@ If `deltCrossAxis * ignoreCrossMove > deltMainAxis`, carousel would ignore the d
 
 `true` as `1` and `false` as `0`. Default `true`.
 
+### props.maxCursorOffset {Number}
+
+If loop is false, limit the maximum move to this many cards before the end. E.g. if you render 3 cards in view, you can
+set maxCursorOffset to 2, so that you never only see 1 card with 2 empty spaces. Default `0`.
+
 ## Concepts
 
 ### Cursor

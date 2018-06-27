@@ -32,7 +32,8 @@ const defaultProps = {
   onDragCancel () {},
   maxOverflow: 0.5,
   clickTolerance: 2,
-  ignoreCrossMove: true
+  ignoreCrossMove: true,
+  maxCursorOffset: 0
 }
 
 const propsKeys = Object.keys(defaultProps)
@@ -255,11 +256,11 @@ class TouchCarousel extends React.PureComponent {
   }
 
   getComputedCursor () {
-    const {cardCount, loop, maxOverflow} = this.props
+    const {cardCount, loop, maxOverflow, maxCursorOffset} = this.props
     const {cursor, dragging} = this.state
     let computedCursor = cursor
     if (!loop) {
-      computedCursor = clamp(computedCursor, 1 - cardCount, 0)
+      computedCursor = clamp(computedCursor, 1 - cardCount + maxCursorOffset, 0)
       if (dragging && cursor > 0) {
         computedCursor = maxOverflow - maxOverflow / (cursor + 1)
       } else if (dragging && cursor < 1 - cardCount) {
