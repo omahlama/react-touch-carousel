@@ -6,7 +6,7 @@ import {
 } from './utils'
 
 function TouchMoveRecord (e) {
-  const {x, y} = getTouchPosition(e)
+  const { x, y } = getTouchPosition(e)
   this.x = x
   this.y = y
   this.time = Date.now()
@@ -65,28 +65,28 @@ class TouchCarousel extends React.PureComponent {
     this.stopAutoplay()
   }
 
-  onTouchStart = (e) => {
+  onTouchStart = e => {
     const oldTouchCount = this.touchCount
     this.touchCount += e.changedTouches.length
-    this.setState({active: true})
+    this.setState({ active: true })
     this.stopAutoplay()
     this.tracingTouchId = getTouchId(e)
     this.touchMoves = [new TouchMoveRecord(e)]
     this.isMovingCross = null
-    const {cardSize, clickTolerance} = this.props
+    const { cardSize, clickTolerance } = this.props
     // User click a card before it's in place but near, allow the clicking.
     // Otherwise it's only a grab.
-    this.grabbing = cardSize * Math.abs(this.usedCursor - this.state.cursor) > clickTolerance
+    this.grabbing =
+      cardSize * Math.abs(this.usedCursor - this.state.cursor) > clickTolerance
     // When user clicks or grabs the scroll, cancel the spring effect.
     if (!oldTouchCount) {
-      this.setCursor(this.usedCursor)
-        .then(this.modCursor)
+      this.setCursor(this.usedCursor).then(this.modCursor)
     } else {
       this.modCursor()
     }
-  }
+  };
 
-  onTouchMove = (e) => {
+  onTouchMove = e => {
     this.grabbing = false
     const touchMove = new TouchMoveRecord(e)
     const touchId = getTouchId(e)
@@ -98,15 +98,19 @@ class TouchCarousel extends React.PureComponent {
     let shouldIgnore = e.defaultPrevented
     if (!shouldIgnore && this.state.active) {
       if (this.isMovingCross == null) {
-        const {vertical, ignoreCrossMove} = this.props
+        const { vertical, ignoreCrossMove } = this.props
         let factor = ignoreCrossMove
         if (typeof factor !== 'number') {
           factor = factor ? 1 : 0
         }
         const mainAxis = vertical ? 'y' : 'x'
         const crossAxis = vertical ? 'x' : 'y'
-        const deltMain = Math.abs(touchMove[mainAxis] - this.touchMoves[0][mainAxis])
-        const deltCross = Math.abs(touchMove[crossAxis] - this.touchMoves[0][crossAxis])
+        const deltMain = Math.abs(
+          touchMove[mainAxis] - this.touchMoves[0][mainAxis]
+        )
+        const deltCross = Math.abs(
+          touchMove[crossAxis] - this.touchMoves[0][crossAxis]
+        )
         this.isMovingCross = deltCross * factor > deltMain
       }
       shouldIgnore = this.isMovingCross
@@ -121,21 +125,25 @@ class TouchCarousel extends React.PureComponent {
     // please use CSS `touch-action` for it.
     e.preventDefault()
 
-    const {cardSize, moveScale, vertical, onDragStart} = this.props
+    const { cardSize, moveScale, vertical, onDragStart } = this.props
     const lastMove = this.touchMoves[this.touchMoves.length - 1]
     const xy = vertical ? 'y' : 'x'
     const distance = touchMove[xy] - lastMove[xy]
-    this.setState({dragging: true}, this.state.dragging ? undefined : onDragStart)
-    this.setCursor(this.state.cursor + distance / cardSize * moveScale)
+    this.setState(
+      { dragging: true },
+      this.state.dragging ? undefined : onDragStart
+    )
+    this.setCursor(this.state.cursor + (distance / cardSize) * moveScale)
 
     this.touchMoves.push(touchMove)
     if (this.touchMoves.length > 250) {
       this.touchMoves.splice(0, 50)
     }
-  }
+    this.modCursor()
+  };
 
-  onTouchEndOrCancel = (e) => {
-    const {type} = e
+  onTouchEndOrCancel = e => {
+    const { type } = e
     this.touchCount -= e.changedTouches.length
     if (this.touchCount > 0) {
       this.touchMoves = []
@@ -167,7 +175,7 @@ class TouchCarousel extends React.PureComponent {
       const momentumDistance = touchMoveVelocity * Math.abs(touchMoveVelocity) / friction / 2
       const {cursor} = this.state
       const cursorDelta = clamp(
-        momentumDistance / cardSize * moveScale,
+        (momentumDistance / cardSize) * moveScale,
         Math.floor(cursor) - cursor,
         Math.ceil(cursor) - cursor
       )
@@ -178,7 +186,7 @@ class TouchCarousel extends React.PureComponent {
       // Snap the cursor.
       targetCursor = Math.round(this.state.cursor)
     }
-    this.setState({active: false, dragging: false}, () => {
+    this.setState({ active: false, dragging: false }, () => {
       this.setCursor(targetCursor)
       if (wasDragging) {
         this.props[type === 'touchend' ? 'onDragEnd' : 'onDragCancel']()
@@ -186,19 +194,21 @@ class TouchCarousel extends React.PureComponent {
     })
     this.tracingTouchId = null
     this.autoplayIfEnabled()
-  }
+  };
 
   onSpringRest = () => {
     if (!this.shouldEnableSpring()) return
-    this.setState({springing: false})
-    const cursor = Math.round(this.usedCursor)
-    const index = -cursor
-    let modIndex = index % this.props.cardCount
-    while (modIndex < 0) {
-      modIndex += this.props.cardCount
-    }
-    this.props.onRest(index, modIndex, cursor, this.state)
-  }
+    this.setState({ springing: false })
+    this.modCursor().then(() => {
+      const cursor = Math.round(this.usedCursor)
+      const index = -cursor
+      let modIndex = index % this.props.cardCount
+      while (modIndex < 0) {
+        modIndex += this.props.cardCount
+      }
+      this.props.onRest(index, modIndex, cursor, this.state)
+    })
+  };
 
   autoplayIfEnabled = () => {
     if (this.props.autoplay) {
@@ -207,64 +217,72 @@ class TouchCarousel extends React.PureComponent {
       }
       this.autoplayTimer = setInterval(this.next, this.props.autoplay)
     }
-  }
+  };
 
   stopAutoplay = () => {
     if (this.autoplayTimer) {
       clearInterval(this.autoplayTimer)
       this.autoplayTimer = null
     }
-  }
+  };
 
   resetAutoplayTimer = () => {
     this.stopAutoplay()
     this.autoplayIfEnabled()
-  }
+  };
 
-  go = (n) => {
+  go = n => {
     return this.modCursor().then(() => {
       // n must be in range here.
       // That's why next()/prev() don't use this method.
       this.setCursor(n)
       this.resetAutoplayTimer()
     })
-  }
+  };
 
   next = () => {
     return this.modCursor().then(() => {
       this.setCursor(this.state.cursor - 1)
       this.resetAutoplayTimer()
     })
-  }
+  };
 
   prev = () => {
     return this.modCursor().then(() => {
       this.setCursor(this.state.cursor + 1)
       this.resetAutoplayTimer()
     })
-  }
+  };
 
-  setCursor = (cursor) => {
+  setCursor = cursor => {
     const springing = this.shouldEnableSpring() && cursor !== this.state.cursor
     return new Promise(resolve => {
-      this.setState({cursor, springing}, resolve)
+      this.setState({ cursor, springing }, resolve)
     })
-  }
+  };
 
   getCursor () {
     return this.state.cursor
   }
 
   getComputedCursor () {
-    const {cardCount, loop, maxOverflow, maxCursorOffset} = this.props
-    const {cursor, dragging} = this.state
+    const { cardCount, loop, maxOverflow, maxCursorOffset } = this.props
+    const { cursor, dragging } = this.state
     let computedCursor = cursor
     if (!loop) {
-      computedCursor = clamp(computedCursor, 1 - cardCount + maxCursorOffset, 0)
+      computedCursor = clamp(
+        computedCursor,
+        1 - cardCount + maxCursorOffset,
+        0
+      )
       if (dragging && cursor > 0) {
         computedCursor = maxOverflow - maxOverflow / (cursor + 1)
       } else if (dragging && cursor < 1 - cardCount) {
-        computedCursor = 1 - cardCount - maxOverflow + maxOverflow / (1 - cardCount - cursor + 1)
+        computedCursor =
+          1 -
+          cardCount -
+          maxOverflow +
+          maxOverflow / (1 - cardCount - cursor + 1)
       }
     }
     return computedCursor
@@ -274,21 +292,21 @@ class TouchCarousel extends React.PureComponent {
     return this.usedCursor
   }
 
-  modAs = (cursor) => {
+  modAs = cursor => {
     return new Promise(resolve => {
-      this.setState({moding: true, cursor}, () => {
-        this.setState({moding: false}, resolve)
+      this.setState({ moding: true, cursor }, () => {
+        this.setState({ moding: false }, resolve)
       })
     })
-  }
+  };
 
   modCursor = () => {
     return new Promise(resolve => {
-      const {loop, cardCount} = this.props
+      const { loop, cardCount } = this.props
       if (!loop) {
         return resolve()
       }
-      const {cursor} = this.state
+      const { cursor } = this.state
       const newCursor = modCursor(cursor, cardCount)
       if (newCursor !== cursor) {
         this.modAs(newCursor).then(resolve)
@@ -296,12 +314,12 @@ class TouchCarousel extends React.PureComponent {
         resolve()
       }
     })
-  }
+  };
 
   shouldEnableSpring = () => {
-    const {active, moding} = this.state
+    const { active, moding } = this.state
     return !active && !moding
-  }
+  };
 
   render () {
     const {
@@ -324,7 +342,7 @@ class TouchCarousel extends React.PureComponent {
         to={{cursor: computedCursor}}
         onRest={this.onSpringRest}
       >
-        {({cursor}) => {
+        {({ cursor }) => {
           this.usedCursor = cursor
           return (
             <Component
